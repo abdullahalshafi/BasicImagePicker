@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="something_went_wrong_please_try_again">Something went wrong! Please try again</string>
+    <string name="storage_permission">Storage Permission</string>
+    <string name="you_can_not_capture_image_unless_you_give_storage_permission">You can not capture image unless you give storage permission</string>
+    <string name="please_give_storage_permission">Please give storage permission</string>
+    <string name="camera_permission">Camera Permission</string>
+    <string name="you_can_not_capture_image_unless_you_give_camera_permission">You can not capture image unless you give camera permission</string>
+    <string name="please_give_camera_permission">Please give camera permission</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+</resources>
