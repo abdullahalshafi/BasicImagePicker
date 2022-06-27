@@ -35,9 +35,12 @@ class ImageUtilActivity : AppCompatActivity() {
     private var imagePath: String? = null
     private var imageUri: Uri? = null
 
+    private var callingPackageName: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        callingPackageName = intent.getStringExtra(PACKAGE_NAME)
         config =
             intent.getSerializableExtra(ImageUtilConfig::class.java.simpleName) as ImageUtilConfig
 
@@ -202,13 +205,12 @@ class ImageUtilActivity : AppCompatActivity() {
                     getString(R.string.you_can_not_capture_image_unless_you_give_storage_permission),
                     getString(R.string.please_give_storage_permission)
                 ) {
-                    val packageName = intent.getStringExtra(PACKAGE_NAME)
                     finish()
                     val intent = Intent()
                     intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                     val uri = Uri.fromParts(
                         "package",
-                        packageName, null
+                        callingPackageName, null
                     )
                     intent.data = uri
                     //intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -241,13 +243,13 @@ class ImageUtilActivity : AppCompatActivity() {
                     getString(R.string.you_can_not_capture_image_unless_you_give_camera_permission),
                     getString(R.string.please_give_camera_permission)
                 ) {
-                    val packageName = intent.getStringExtra(PACKAGE_NAME)
+
                     finish()
                     val intent = Intent()
                     intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
                     val uri = Uri.fromParts(
                         "package",
-                        packageName, null
+                        callingPackageName, null
                     )
                     intent.data = uri
                     //intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -378,7 +380,7 @@ class ImageUtilActivity : AppCompatActivity() {
                         imagePath = file.absolutePath
                         return FileProvider.getUriForFile(
                             this,
-                            "com.shafi.basic_image_picker.fileprovider",
+                            "${callingPackageName}.basicimagepicker.fileprovider",
                             file
                         )
                     }

@@ -11,13 +11,13 @@
         <activity android:name=".activity.ImageUtilActivity"/>
 
         <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="com.shafi.basic_image_picker.fileprovider"
+            android:name=".util.BasicImagePickerFileProvider"
+            android:authorities="${applicationId}.basicimagepicker.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+                android:resource="@xml/basic_image_picker_file_paths" />
         </provider>
 
     </application>
