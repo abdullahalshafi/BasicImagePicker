@@ -15,7 +15,7 @@ allprojects {
 ### Step 2. Add the dependency
 ```Kotlin
 dependencies {
-    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.0.1'
+    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.0.2'
 }
 ```
 
