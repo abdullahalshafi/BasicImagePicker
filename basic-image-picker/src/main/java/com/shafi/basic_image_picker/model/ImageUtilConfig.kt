@@ -6,6 +6,5 @@ data class ImageUtilConfig(
     var isCamera: Boolean = false,
     var isGallery: Boolean = false,
     var saveIntoGallery: Boolean = false,
-    var galleryDirectory: String = "",
-    var savePickedImageToCache: Boolean = true
+    var galleryDirectory: String = ""
 ): Serializable

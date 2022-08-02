@@ -64,10 +64,6 @@ class ImageUtilHelper(
         config.galleryDirectory = directoryName
     }
 
-    public fun savePickedImageToCache(shouldSaveIntoCache: Boolean) {
-        config.savePickedImageToCache = shouldSaveIntoCache
-    }
-
     public fun start() {
 
         val intent = Intent(activity, ImageUtilActivity::class.java)

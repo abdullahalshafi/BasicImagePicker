@@ -290,17 +290,17 @@ class ImageUtilActivity : AppCompatActivity() {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
-            val collection =
-                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, imageName)
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                put(
-                    MediaStore.Images.Media.RELATIVE_PATH,
-                    Environment.DIRECTORY_DCIM + subDirectory
-                )
-            }
             try {
+                val collection =
+                    MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, imageName)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(
+                        MediaStore.Images.Media.RELATIVE_PATH,
+                        Environment.DIRECTORY_DCIM + subDirectory
+                    )
+                }
                 contentResolver.insert(collection, contentValues)?.also { uri ->
                     contentResolver.openOutputStream(uri)?.use { outputStream ->
                         contentResolver.openInputStream(imageUri!!)?.use { input ->
@@ -341,11 +341,8 @@ class ImageUtilActivity : AppCompatActivity() {
 
         try {
             imageName = "${UUID.randomUUID()}.jpg"
-            val file = if (config.savePickedImageToCache) {
-                File(cacheDir, imageName!!)
-            } else {
-                File(filesDir, imageName!!)
-            }
+            val file = File(cacheDir, imageName!!)
+
             if (!file.exists()) {
                 file.createNewFile().also { status ->
                     if (status) {
@@ -372,7 +369,7 @@ class ImageUtilActivity : AppCompatActivity() {
     private fun createEmptyFileAndGetUri(): Uri? {
         try {
             imageName = "${UUID.randomUUID()}.jpg"
-            val file = File(filesDir, imageName!!)
+            val file = File(cacheDir, imageName!!)
 
             if (!file.exists()) {
                 file.createNewFile().also {
