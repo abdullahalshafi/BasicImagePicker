@@ -1,5 +1,5 @@
 # Basic Image Picker
-A Simple Android Library top capture and pick image from gallery.
+A Simple Android Library to capture and pick image from gallery.
 
 ### Step 1. Add the JitPack repository to your build file
 Add it in your root build.gradle at the end of repositories:
