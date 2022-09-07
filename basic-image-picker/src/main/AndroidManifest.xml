@@ -8,7 +8,8 @@
 
     <application>
 
-        <activity android:name=".activity.ImageUtilActivity"/>
+        <activity android:name=".activity.ImageUtilActivity"
+            android:theme="@style/BasicImagePickerTheme.Transparent"/>
 
         <provider
             android:name=".util.BasicImagePickerFileProvider"

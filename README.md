@@ -15,27 +15,27 @@ allprojects {
 ### Step 2. Add the dependency
 ```Kotlin
 dependencies {
-    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.0.2'
+    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.0.4'
 }
 ```
 
 ### Usage
 #### Camera
 ```kotlin
-    ImageUtilHelper.create(this, cameraLauncher){
-        isCamera(true)
-        saveIntoGallery(true)
-        galleryDirectoryName("MyDirectory")
-        start()
-    }
+ ImageUtilHelper.create(this, cameraLauncher){
+    isCamera(true)
+    saveIntoGallery(true)
+    galleryDirectoryName("MyDirectory")
+    start()
+ }
 ```
 
 #### Gallery
 ```kotlin
-    ImageUtilHelper.create(this, galleryLauncher){
-        isGallery(true)
-        start()
-    }
+ ImageUtilHelper.create(this, galleryLauncher){
+    isGallery(true)
+    start()
+ }
 ```
 
 #### Camera Result
