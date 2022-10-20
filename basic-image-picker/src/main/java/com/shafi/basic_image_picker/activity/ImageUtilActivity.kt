@@ -18,7 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.shafi.basic_image_picker.model.Image
+import com.shafi.basic_image_picker.model.BasicImageData
 import com.shafi.basic_image_picker.model.ImageUtilConfig
 import com.shafi.basic_image_picker.R
 import com.shafi.basic_image_picker.util.ImageUtilHelper.Companion.PACKAGE_NAME
@@ -66,11 +66,11 @@ class ImageUtilActivity : AppCompatActivity() {
     //send result to activity
     private fun sendResultOkAndFinish() {
         if (imageName != null && imagePath != null && imageUri != null) {
-            val image = Image(imageName!!, imagePath!!, imageUri.toString())
+            val basicImageData = BasicImageData(imageName!!, imagePath!!, imageUri.toString())
             val intent = Intent()
             setResult(
                 Activity.RESULT_OK,
-                intent.putExtra(Image::class.java.simpleName, image)
+                intent.putExtra(BasicImageData::class.java.simpleName, basicImageData)
             )
             finish()
         } else {

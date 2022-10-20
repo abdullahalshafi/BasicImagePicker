@@ -15,7 +15,7 @@ allprojects {
 ### Step 2. Add the dependency
 ```Kotlin
 dependencies {
-    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.0.4'
+    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.0.5'
 }
 ```
 
@@ -45,8 +45,8 @@ private val cameraLauncher = registerForActivityResult(ActivityResultContracts.S
 
     if (it.resultCode == Activity.RESULT_OK) {
 
-       val image: Image =
-          it.data!!.getSerializableExtra(Image::class.java.simpleName) as Image
+       val image: BasicImageData =
+          it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
 
        //do stuffs with the image object
      }else if(it.resultCode == Activity.RESULT_CANCELED) {
@@ -62,8 +62,8 @@ private val galleryLauncher = registerForActivityResult(ActivityResultContracts.
      if(it.resultCode == Activity.RESULT_OK){
         if (it.resultCode == Activity.RESULT_OK) {
 
-         val image: Image =
-                   it.data!!.getSerializableExtra(Image::class.java.simpleName) as Image
+         val image: BasicImageData =
+                   it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
 
           //do stuffs with the image object
          }else if(it.resultCode == Activity.RESULT_CANCELED) {

@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.widget.Button
 import androidx.activity.result.contract.ActivityResultContracts
 import com.bumptech.glide.Glide
-import com.shafi.basic_image_picker.model.Image
+import com.shafi.basic_image_picker.model.BasicImageData
 import com.shafi.basic_image_picker.util.ImageUtilHelper
 
 class MainActivity : AppCompatActivity() {
@@ -38,12 +38,12 @@ class MainActivity : AppCompatActivity() {
 
             if (it.resultCode == Activity.RESULT_OK) {
 
-                val image: Image =
-                    it.data!!.getSerializableExtra(Image::class.java.simpleName) as Image
+                val basicImageData: BasicImageData =
+                    it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
 
                 //do stuffs with the image object
                 Glide.with(this)
-                    .load(image.path)
+                    .load(basicImageData.path)
                     .into(findViewById(R.id.image_view))
             }else if(it.resultCode == Activity.RESULT_CANCELED) {
                 //handle your own situation
@@ -55,12 +55,12 @@ class MainActivity : AppCompatActivity() {
         if(it.resultCode == Activity.RESULT_OK){
             if (it.resultCode == Activity.RESULT_OK) {
 
-                val image: Image =
-                    it.data!!.getSerializableExtra(Image::class.java.simpleName) as Image
+                val basicImageData: BasicImageData =
+                    it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
 
                 //do stuffs with the image object
                 Glide.with(this)
-                    .load(image.path)
+                    .load(basicImageData.path)
                     .into(findViewById(R.id.image_view))
             }else if(it.resultCode == Activity.RESULT_CANCELED) {
                 //handle your own situation

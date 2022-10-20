@@ -1,6 +1,6 @@
 package com.shafi.basic_image_picker.util
 
-import android.app.Activity
+
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -14,7 +14,7 @@ import id.zelory.compressor.constraint.resolution
 import java.io.File
 
 class ImageUtilHelper(
-    private var activity: Activity,
+    private var context: Context,
     private var intentLauncher: ActivityResultLauncher<Intent>
 ) {
     private var config: ImageUtilConfig = ImageUtilConfig()
@@ -24,11 +24,11 @@ class ImageUtilHelper(
         const val PACKAGE_NAME = "package_name"
 
         public fun create(
-            activity: Activity,
+            context: Context,
             intentLauncher: ActivityResultLauncher<Intent>,
             imageUtil: ImageUtilHelper.() -> Unit
         ): ImageUtilHelper {
-            return ImageUtilHelper(activity, intentLauncher).apply(imageUtil)
+            return ImageUtilHelper(context, intentLauncher).apply(imageUtil)
         }
 
         suspend fun compressImage(
@@ -66,9 +66,9 @@ class ImageUtilHelper(
 
     public fun start() {
 
-        val intent = Intent(activity, ImageUtilActivity::class.java)
+        val intent = Intent(context, ImageUtilActivity::class.java)
         intent.putExtra(ImageUtilConfig::class.simpleName, config)
-        intent.putExtra(PACKAGE_NAME, activity.packageName)
+        intent.putExtra(PACKAGE_NAME, context.packageName)
         intentLauncher.launch(intent)
     }
 }
