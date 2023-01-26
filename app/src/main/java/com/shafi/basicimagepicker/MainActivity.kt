@@ -28,6 +28,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.gallery_btn).setOnClickListener {
             ImageUtilHelper.create(this, galleryLauncher){
                 isGallery(true)
+                isOnlyVideo(true)
+                setVideoSizeLimit(1)
                 start()
             }
         }
