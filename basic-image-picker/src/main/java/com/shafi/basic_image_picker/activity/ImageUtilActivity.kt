@@ -11,7 +11,9 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.MediaStore.EXTRA_SIZE_LIMIT
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -59,7 +61,18 @@ class ImageUtilActivity : AppCompatActivity() {
             launchCamera()
 
         } else if (config.isGallery) {
-            galleryLauncher.launch("image/*")
+            if (config.isOnlyVideo) {
+                val intent = Intent(Intent.ACTION_PICK)
+                intent.type = "video/*"
+                //galleryLauncher.launch("video/*")
+                config.videoSizeLimit?.let { limitInMB ->
+                    val sizeLimit: Long = (limitInMB * 1024 * 1024).toLong()
+                    intent.putExtra(EXTRA_SIZE_LIMIT, sizeLimit)
+                }
+                galleryVideoLauncher.launch(intent)
+                return
+            }
+            //galleryLauncher.launch("image/*")
         }
     }
 
@@ -125,9 +138,19 @@ class ImageUtilActivity : AppCompatActivity() {
             if (uri != null) {
                 imageUri = uri
                 copyGalleryFileToInternalStorage()
-                sendResultOkAndFinish()
             } else {
                 sendResultCanceledAndFinish(false)
+            }
+        }
+
+    //gallery intent result for video
+    private val galleryVideoLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+
+                val uri: Uri = result.data?.data as Uri
+                Log.d("VIDEO_URI", "$uri")
+                sendResultCanceledAndFinish(true)
             }
         }
 
@@ -353,16 +376,17 @@ class ImageUtilActivity : AppCompatActivity() {
                                 }
                             }
                             imagePath = file.absolutePath
+                            sendResultOkAndFinish()
                         } catch (ex: IOException) {
                             ex.printStackTrace()
                             sendResultCanceledAndFinish(true)
                         }
-
                     }
                 }
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
+            sendResultCanceledAndFinish(true)
         }
     }
 

@@ -56,6 +56,14 @@ class ImageUtilHelper(
         config.isGallery = isGallery
     }
 
+    public fun isOnlyVideo(isOnlyVideo: Boolean) {
+        config.isOnlyVideo = isOnlyVideo
+    }
+
+    public fun setVideoSizeLimit(sizeLimitInMb: Int) {
+        config.videoSizeLimit = sizeLimitInMb
+    }
+
     public fun saveIntoGallery(shouldSaveIntoGallery: Boolean) {
         config.saveIntoGallery = shouldSaveIntoGallery
     }
