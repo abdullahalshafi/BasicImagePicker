@@ -409,8 +409,12 @@ class ImageUtilActivity : AppCompatActivity() {
                             ex.printStackTrace()
                             sendResultCanceledAndFinish(true)
                         }
+                    }else{
+                        sendResultCanceledAndFinish(true)
                     }
                 }
+            }else{
+                sendResultCanceledAndFinish(true)
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
@@ -432,8 +436,12 @@ class ImageUtilActivity : AppCompatActivity() {
                             "${callingPackageName}.basicimagepicker.fileprovider",
                             file
                         )
+                    }else{
+                        sendResultCanceledAndFinish(true)
                     }
                 }
+            }else{
+                sendResultCanceledAndFinish(true)
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
@@ -460,8 +468,12 @@ class ImageUtilActivity : AppCompatActivity() {
                             ex.printStackTrace()
                             sendResultCanceledAndFinish(true)
                         }
+                    }else{
+                        sendResultCanceledAndFinish(true)
                     }
                 }
+            }else{
+                sendResultCanceledAndFinish(true)
             }
         } catch (ex: Exception) {
             ex.printStackTrace()
