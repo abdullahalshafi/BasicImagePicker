@@ -15,7 +15,7 @@ allprojects {
 ### Step 2. Add the dependency
 ```Kotlin
 dependencies {
-    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.0.5'
+    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.0.6'
 }
 ```
 
@@ -34,6 +34,15 @@ dependencies {
 ```kotlin
  ImageUtilHelper.create(this, galleryLauncher){
     isGallery(true)
+    start()
+ }
+```
+### Video
+```Kotlin
+ ImageUtilHelper.create(this, galleryVideoLauncher) {
+    isGallery(true)
+    isOnlyVideo(true)
+    setVideoSizeLimitInMB(10)
     start()
  }
 ```
@@ -71,6 +80,25 @@ private val galleryLauncher = registerForActivityResult(ActivityResultContracts.
          }
         }
    }
+```
+
+#### Gallery Video Result
+```kotlin
+private val galleryVideoLauncher =
+    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (it.resultCode == Activity.RESULT_OK) {
+            if (it.resultCode == Activity.RESULT_OK) {
+
+                val basicImageData: BasicImageData =
+                    it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
+
+                Log.d("VIDEO_DATA", "name: ${basicImageData.name} path: ${basicImageData.path}")
+
+            } else if (it.resultCode == Activity.RESULT_CANCELED) {
+                //handle your own situation
+            }
+        }
+    }
 ```
 
 #### Compress Image using zetbaitsu Compressor

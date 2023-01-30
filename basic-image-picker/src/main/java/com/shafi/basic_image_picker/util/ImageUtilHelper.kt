@@ -60,7 +60,7 @@ class ImageUtilHelper(
         config.isOnlyVideo = isOnlyVideo
     }
 
-    public fun setVideoSizeLimit(sizeLimitInMb: Int) {
+    public fun setVideoSizeLimitInMB(sizeLimitInMb: Int) {
         config.videoSizeLimit = sizeLimitInMb
     }
 

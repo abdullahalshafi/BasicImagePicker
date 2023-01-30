@@ -9,4 +9,5 @@
     <string name="please_give_camera_permission">Please give camera permission</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="you_must_specify_camera_or_gallery">You must specify either camera or gallery when starting BasicImagePicker</string>
 </resources>

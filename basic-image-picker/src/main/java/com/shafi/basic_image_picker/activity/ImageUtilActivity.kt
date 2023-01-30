@@ -11,9 +11,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.provider.MediaStore.EXTRA_SIZE_LIMIT
+import android.provider.OpenableColumns
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -36,6 +35,10 @@ class ImageUtilActivity : AppCompatActivity() {
     private var imageName: String? = null
     private var imagePath: String? = null
     private var imageUri: Uri? = null
+
+    private var videoName: String? = null
+    private var videoPath: String? = null
+    private var videoUri: Uri? = null
 
     private var callingPackageName: String? = null
 
@@ -62,21 +65,16 @@ class ImageUtilActivity : AppCompatActivity() {
 
         } else if (config.isGallery) {
             if (config.isOnlyVideo) {
-                val intent = Intent(Intent.ACTION_PICK)
-                intent.type = "video/*"
-                //galleryLauncher.launch("video/*")
-                config.videoSizeLimit?.let { limitInMB ->
-                    val sizeLimit: Long = (limitInMB * 1024 * 1024).toLong()
-                    intent.putExtra(EXTRA_SIZE_LIMIT, sizeLimit)
-                }
-                galleryVideoLauncher.launch(intent)
+                galleryVideoLauncher.launch("video/*")
                 return
             }
-            //galleryLauncher.launch("image/*")
+            galleryLauncher.launch("image/*")
+        }else{
+            throw IllegalArgumentException(getString(R.string.you_must_specify_camera_or_gallery))
         }
     }
 
-    //send result to activity
+    //send result to activity for image
     private fun sendResultOkAndFinish() {
         if (imageName != null && imagePath != null && imageUri != null) {
             val basicImageData = BasicImageData(imageName!!, imagePath!!, imageUri.toString())
@@ -88,6 +86,21 @@ class ImageUtilActivity : AppCompatActivity() {
             finish()
         } else {
             sendResultCanceledAndFinish(true)
+        }
+    }
+
+    //send result to activity for video
+    private fun sendVideoResultOkAndFinish() {
+        if (videoName != null && videoPath != null && videoUri != null) {
+            val basicImageData = BasicImageData(videoName!!, videoPath!!, videoUri.toString())
+            val intent = Intent()
+            setResult(
+                Activity.RESULT_OK,
+                intent.putExtra(BasicImageData::class.java.simpleName, basicImageData)
+            )
+            finish()
+        } else {
+            sendResultCanceledAndFinish(false)
         }
     }
 
@@ -137,7 +150,7 @@ class ImageUtilActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             if (uri != null) {
                 imageUri = uri
-                copyGalleryFileToInternalStorage()
+                copyGalleryImageFileToInternalStorage()
             } else {
                 sendResultCanceledAndFinish(false)
             }
@@ -145,12 +158,27 @@ class ImageUtilActivity : AppCompatActivity() {
 
     //gallery intent result for video
     private val galleryVideoLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            if (uri != null) {
 
-                val uri: Uri = result.data?.data as Uri
-                Log.d("VIDEO_URI", "$uri")
-                sendResultCanceledAndFinish(true)
+                val videoFileName = checkVideoFileSizeAndGetFileName(uri)
+
+                //if size limit exceeded
+                if (videoFileName?.isEmpty() == true) {
+                    return@registerForActivityResult
+                }
+
+                //if something went wrong
+                if (videoFileName == null) {
+                    sendResultCanceledAndFinish(true)
+                    return@registerForActivityResult
+                }
+
+                videoUri = uri
+                videoName = videoFileName
+                copyGalleryVideoFileToInternalStorage()
+            } else {
+                sendResultCanceledAndFinish(false)
             }
         }
 
@@ -360,7 +388,7 @@ class ImageUtilActivity : AppCompatActivity() {
         }
     }
 
-    private fun copyGalleryFileToInternalStorage() {
+    private fun copyGalleryImageFileToInternalStorage() {
 
         try {
             imageName = "${UUID.randomUUID()}.jpg"
@@ -410,6 +438,68 @@ class ImageUtilActivity : AppCompatActivity() {
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
+        return null
+    }
+
+    private fun copyGalleryVideoFileToInternalStorage() {
+
+        try {
+            val file = File(cacheDir, videoName!!)
+            if (!file.exists()) {
+                file.createNewFile().also { status ->
+                    if (status) {
+                        try {
+                            FileOutputStream(file).use { outputStream ->
+                                contentResolver.openInputStream(videoUri!!)?.use { input ->
+                                    input.copyTo(outputStream)
+                                }
+                            }
+                            videoPath = file.absolutePath
+                            sendVideoResultOkAndFinish()
+                        } catch (ex: IOException) {
+                            ex.printStackTrace()
+                            sendResultCanceledAndFinish(true)
+                        }
+                    }
+                }
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            sendResultCanceledAndFinish(true)
+        }
+    }
+
+    private fun checkVideoFileSizeAndGetFileName(videoFileUri: Uri): String? {
+
+        val cursorUri = contentResolver.query(videoFileUri, null, null, null, null)
+
+        cursorUri?.let { cursor ->
+
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+            cursor.moveToFirst()
+            var fileNameExtension = cursor.getString(nameIndex).substringAfterLast('.')
+            val fileSize = cursor.getLong(sizeIndex)
+            cursor.close()
+
+            //if video size is required
+            if (config.videoSizeLimit != null) {
+
+                val sizeLimitInLong: Long = (config.videoSizeLimit!! * 1024 * 1024).toLong()
+                if (fileSize > sizeLimitInLong) {
+                    Toast.makeText(
+                        this,
+                        "Video size should not exceed ${config.videoSizeLimit} MB",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    galleryVideoLauncher.launch("video/*")
+                    return ""
+                }
+            }
+            fileNameExtension = "${UUID.randomUUID()}.$fileNameExtension"
+            return fileNameExtension
+        }
+
         return null
     }
 }
