@@ -11,6 +11,9 @@
         <activity android:name=".activity.ImageUtilActivity"
             android:theme="@style/BasicImagePickerTheme.Transparent"/>
 
+        <activity android:name=".activity.MultiImageUtilActivity"
+            android:theme="@style/BasicImagePickerTheme.Transparent"/>
+
         <provider
             android:name=".util.BasicImagePickerFileProvider"
             android:authorities="${applicationId}.basicimagepicker.fileprovider"

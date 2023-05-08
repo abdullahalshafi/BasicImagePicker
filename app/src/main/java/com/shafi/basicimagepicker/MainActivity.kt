@@ -42,6 +42,15 @@ class MainActivity : AppCompatActivity() {
                 start()
             }
         }
+
+        //multiple image
+        findViewById<Button>(R.id.multi_image_btn).setOnClickListener {
+            ImageUtilHelper.create(this, multiImageLauncher) {
+                multi()
+                maxImage(5)
+                start()
+            }
+        }
     }
 
     private val cameraLauncher =
@@ -90,6 +99,27 @@ class MainActivity : AppCompatActivity() {
                         it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
 
                     Log.d("VIDEO_DATA", "name: ${basicImageData.name} path: ${basicImageData.path}")
+
+                } else if (it.resultCode == Activity.RESULT_CANCELED) {
+                    //handle your own situation
+                }
+            }
+        }
+
+    private val multiImageLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (it.resultCode == Activity.RESULT_OK) {
+                if (it.resultCode == Activity.RESULT_OK) {
+
+                    val images: List<BasicImageData> =
+                        it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as List<BasicImageData>
+
+                    Log.d("MULTI_IMAGE_DATA", "images: ${images.toString()}}")
+
+                    //do stuffs with the image object
+                    Glide.with(this)
+                        .load(images[0].path)
+                        .into(findViewById(R.id.image_view))
 
                 } else if (it.resultCode == Activity.RESULT_CANCELED) {
                     //handle your own situation

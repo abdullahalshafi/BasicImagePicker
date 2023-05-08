@@ -8,5 +8,7 @@ data class ImageUtilConfig(
     var isOnlyVideo: Boolean = false,
     var videoSizeLimit: Int? = null,
     var saveIntoGallery: Boolean = false,
-    var galleryDirectory: String = ""
+    var galleryDirectory: String = "",
+    var isMulti: Boolean = false,
+    var maxImage: Int = 0
 ): Serializable

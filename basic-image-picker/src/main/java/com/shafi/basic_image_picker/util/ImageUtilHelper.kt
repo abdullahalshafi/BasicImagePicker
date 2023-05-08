@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import androidx.activity.result.ActivityResultLauncher
 import com.shafi.basic_image_picker.activity.ImageUtilActivity
+import com.shafi.basic_image_picker.activity.MultiImageUtilActivity
 import com.shafi.basic_image_picker.model.ImageUtilConfig
 import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.format
@@ -72,9 +73,21 @@ class ImageUtilHelper(
         config.galleryDirectory = directoryName
     }
 
+    public fun multi() {
+        config.isMulti = true
+    }
+
+    public fun maxImage(maxLimit: Int) {
+        config.maxImage = maxLimit
+    }
+
     public fun start() {
 
-        val intent = Intent(context, ImageUtilActivity::class.java)
+        val intent = if (config.isMulti && config.maxImage > 0) {
+            Intent(context, MultiImageUtilActivity::class.java)
+        } else {
+            Intent(context, ImageUtilActivity::class.java)
+        }
         intent.putExtra(ImageUtilConfig::class.simpleName, config)
         intent.putExtra(PACKAGE_NAME, context.packageName)
         intentLauncher.launch(intent)

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="ef_font_medium">20sp</dimen>
+    <dimen name="ef_font_small">15sp</dimen>
+</resources>

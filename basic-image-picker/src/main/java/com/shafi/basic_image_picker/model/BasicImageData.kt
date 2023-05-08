@@ -1,5 +1,6 @@
 package com.shafi.basic_image_picker.model
 
+
 import java.io.Serializable
 
 data class BasicImageData(
@@ -7,3 +8,4 @@ data class BasicImageData(
     val path: String,
     val uri: String
 ): Serializable
+
