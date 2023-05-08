@@ -5,23 +5,22 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
+
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.esafirm.imagepicker.features.ImagePicker
+
 import com.shafi.basic_image_picker.R
 import com.shafi.basic_image_picker.model.BasicImageData
 import com.shafi.basic_image_picker.model.ImageUtilConfig
-import com.shafi.basic_image_picker.util.BasicProgressDialog
+import imagepicker.features.ImagePicker
+
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
+
 
 /**
  * Created by Shafi on 07/05/2023.

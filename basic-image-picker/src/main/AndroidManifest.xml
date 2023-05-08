@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.shafi.basic_image_picker">
 
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
@@ -14,9 +15,24 @@
         <activity android:name=".activity.MultiImageUtilActivity"
             android:theme="@style/BasicImagePickerTheme.Transparent"/>
 
+        <activity
+            android:name="imagepicker.features.ImagePickerActivity"
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/ef_AppTheme" />
+
         <provider
             android:name=".util.BasicImagePickerFileProvider"
             android:authorities="${applicationId}.basicimagepicker.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/basic_image_picker_file_paths" />
+        </provider>
+
+        <provider
+            android:name="imagepicker.helper.ImagePickerFileProvider"
+            android:authorities="${applicationId}.imagepicker.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
