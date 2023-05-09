@@ -15,6 +15,7 @@ import com.shafi.basic_image_picker.R
 import com.shafi.basic_image_picker.model.BasicImageData
 import com.shafi.basic_image_picker.model.ImageUtilConfig
 import imagepicker.features.ImagePicker
+import imagepicker.features.IpCons
 
 import java.io.File
 import java.io.FileOutputStream
@@ -111,6 +112,8 @@ class MultiImageUtilActivity : AppCompatActivity() {
                     } else {
                         sendResultCanceledAndFinish(true)
                     }
+                }else {
+                    sendResultCanceledAndFinish(false)
                 }
             }
 
@@ -162,6 +165,8 @@ class MultiImageUtilActivity : AppCompatActivity() {
                 selectedImages.add(BasicImageData(image.name, image.path, image.uri.toString()))
             }
             sendResultOkAndFinish()
+        }else if (requestCode == IpCons.RC_IMAGE_PICKER && resultCode != Activity.RESULT_OK) {
+            sendResultCanceledAndFinish(false)
         }
     }
 
