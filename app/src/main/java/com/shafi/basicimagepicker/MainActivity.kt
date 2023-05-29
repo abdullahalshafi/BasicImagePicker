@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
                     val images: List<BasicImageData> =
                         it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as List<BasicImageData>
 
-                    Log.d("MULTI_IMAGE_DATA", "images: ${images.toString()}}")
+                    Log.d("MULTI_IMAGE_DATA", "size: ${images.size} images: $images")
 
                     //do stuffs with the image object
                     Glide.with(this)

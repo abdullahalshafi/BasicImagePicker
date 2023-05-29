@@ -83,7 +83,7 @@ class ImageUtilHelper(
 
     public fun start() {
 
-        val intent = if (config.isMulti && config.maxImage > 0) {
+        val intent = if (config.isMulti) {
             Intent(context, MultiImageUtilActivity::class.java)
         } else {
             Intent(context, ImageUtilActivity::class.java)

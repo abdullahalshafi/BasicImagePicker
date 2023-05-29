@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 
 import com.shafi.basic_image_picker.R
 import com.shafi.basic_image_picker.model.BasicImageData
@@ -44,17 +45,25 @@ class MultiImageUtilActivity : AppCompatActivity() {
         if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(this)) {
             createAndLaunchMultiPicker()
         } else {
-            ImagePicker.create(this)
+            val imagePicker = ImagePicker.create(this)
                 .folderMode(true)
                 .toolbarFolderTitle(getString(R.string.select_photo_album)) // folder selection title
                 .toolbarImageTitle(getString(R.string.tap_to_select)) // image selection title
-                .toolbarArrowColor(Color.WHITE) // Toolbar 'up' arrow color
+                .toolbarArrowColor(
+                    ContextCompat.getColor(
+                        this,
+                        R.color.basic_image_picker_toolbar_color
+                    )
+                ) // Toolbar 'up' arrow color
                 .includeVideo(false) // Show video on image picker
                 .multi() // multi mode (default mode)
-                .limit(config.maxImage)
-                .showCamera(false) // show camera or not (true by default)
-                .enableLog(false) // disabling log
-                .start()
+
+            if (config.maxImage != null) {
+                imagePicker.limit(config.maxImage!!)
+            }
+            imagePicker.showCamera(false) // show camera or not (true by default)
+            imagePicker.enableLog(false) // disabling log
+            imagePicker.start()
         }
     }
 
@@ -96,8 +105,14 @@ class MultiImageUtilActivity : AppCompatActivity() {
 //    }
 
     private fun createAndLaunchMultiPicker() {
+
+        val imageRequest = if (config.maxImage != null) {
+            ActivityResultContracts.PickMultipleVisualMedia(config.maxImage!!)
+        } else {
+            ActivityResultContracts.PickMultipleVisualMedia()
+        }
         val multiImageLauncher =
-            registerForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(config.maxImage)) { uris ->
+            registerForActivityResult(imageRequest) { uris ->
                 if (uris.isNullOrEmpty().not()) {
 
                     //startProgressBar(uris.size)
@@ -112,7 +127,7 @@ class MultiImageUtilActivity : AppCompatActivity() {
                     } else {
                         sendResultCanceledAndFinish(true)
                     }
-                }else {
+                } else {
                     sendResultCanceledAndFinish(false)
                 }
             }
@@ -165,7 +180,7 @@ class MultiImageUtilActivity : AppCompatActivity() {
                 selectedImages.add(BasicImageData(image.name, image.path, image.uri.toString()))
             }
             sendResultOkAndFinish()
-        }else if (requestCode == IpCons.RC_IMAGE_PICKER && resultCode != Activity.RESULT_OK) {
+        } else if (requestCode == IpCons.RC_IMAGE_PICKER && resultCode != Activity.RESULT_OK) {
             sendResultCanceledAndFinish(false)
         }
     }

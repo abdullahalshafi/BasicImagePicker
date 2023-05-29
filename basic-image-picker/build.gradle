@@ -52,7 +52,7 @@ afterEvaluate {
 
                 groupId = 'abdullahalshafi'
                 artifactId = 'basic-image-picker'
-                version = '1.0.7'
+                version = '1.0.9'
             }
         }
     }

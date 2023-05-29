@@ -10,5 +10,5 @@ data class ImageUtilConfig(
     var saveIntoGallery: Boolean = false,
     var galleryDirectory: String = "",
     var isMulti: Boolean = false,
-    var maxImage: Int = 0
+    var maxImage: Int? = null
 ): Serializable
