@@ -14,6 +14,7 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -23,6 +24,8 @@ import com.shafi.basic_image_picker.model.BasicImageData
 import com.shafi.basic_image_picker.model.ImageUtilConfig
 import com.shafi.basic_image_picker.R
 import com.shafi.basic_image_picker.util.ImageUtilHelper.Companion.PACKAGE_NAME
+import imagepicker.features.ImagePicker
+import imagepicker.features.IpCons
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -65,11 +68,29 @@ class ImageUtilActivity : AppCompatActivity() {
 
         } else if (config.isGallery) {
             if (config.isOnlyVideo) {
-                galleryVideoLauncher.launch("video/*")
+                galleryVideoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
                 return
             }
-            galleryLauncher.launch("image/*")
-        }else{
+            if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(this)) {
+                galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            } else {
+                ImagePicker.create(this)
+                    .folderMode(true)
+                    .toolbarFolderTitle(getString(R.string.select_photo_album)) // folder selection title
+                    .toolbarImageTitle(getString(R.string.tap_to_select)) // image selection title
+                    .toolbarArrowColor(
+                        ContextCompat.getColor(
+                            this,
+                            R.color.basic_image_picker_toolbar_icon_color
+                        )
+                    ) // Toolbar 'up' arrow color
+                    .includeVideo(false) // Show video on image picker
+                    .single()
+                    .showCamera(false) // show camera or not (true by default)
+                    .enableLog(false) // disabling log
+                    .start()
+            }
+        } else {
             throw IllegalArgumentException(getString(R.string.you_must_specify_camera_or_gallery))
         }
     }
@@ -147,7 +168,7 @@ class ImageUtilActivity : AppCompatActivity() {
 
     //gallery intent result
     private val galleryLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
                 imageUri = uri
                 copyGalleryImageFileToInternalStorage()
@@ -156,9 +177,26 @@ class ImageUtilActivity : AppCompatActivity() {
             }
         }
 
+    //gallery intent result esa firm
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
+
+            val image = ImagePicker.getFirstImageOrNull(data)
+            imageUri = image.uri
+            imageName = image.name
+            imagePath = image.path
+            sendResultOkAndFinish()
+
+        } else if (requestCode == IpCons.RC_IMAGE_PICKER && resultCode != Activity.RESULT_OK) {
+            sendResultCanceledAndFinish(false)
+        }
+    }
+
     //gallery intent result for video
     private val galleryVideoLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
 
                 val videoFileName = checkVideoFileSizeAndGetFileName(uri)
@@ -409,11 +447,11 @@ class ImageUtilActivity : AppCompatActivity() {
                             ex.printStackTrace()
                             sendResultCanceledAndFinish(true)
                         }
-                    }else{
+                    } else {
                         sendResultCanceledAndFinish(true)
                     }
                 }
-            }else{
+            } else {
                 sendResultCanceledAndFinish(true)
             }
         } catch (ex: Exception) {
@@ -436,11 +474,11 @@ class ImageUtilActivity : AppCompatActivity() {
                             "${callingPackageName}.basicimagepicker.fileprovider",
                             file
                         )
-                    }else{
+                    } else {
                         sendResultCanceledAndFinish(true)
                     }
                 }
-            }else{
+            } else {
                 sendResultCanceledAndFinish(true)
             }
         } catch (ex: Exception) {
@@ -468,11 +506,11 @@ class ImageUtilActivity : AppCompatActivity() {
                             ex.printStackTrace()
                             sendResultCanceledAndFinish(true)
                         }
-                    }else{
+                    } else {
                         sendResultCanceledAndFinish(true)
                     }
                 }
-            }else{
+            } else {
                 sendResultCanceledAndFinish(true)
             }
         } catch (ex: Exception) {
@@ -504,7 +542,7 @@ class ImageUtilActivity : AppCompatActivity() {
                         "Video size should not exceed ${config.videoSizeLimit} MB",
                         Toast.LENGTH_LONG
                     ).show()
-                    galleryVideoLauncher.launch("video/*")
+                    galleryVideoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
                     return ""
                 }
             }

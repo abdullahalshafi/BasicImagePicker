@@ -57,73 +57,67 @@ class MainActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK) {
 
-                if (it.resultCode == Activity.RESULT_OK) {
+                val basicImageData: BasicImageData =
+                    it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
 
-                    val basicImageData: BasicImageData =
-                        it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
-
-                    //do stuffs with the image object
-                    Glide.with(this)
-                        .load(basicImageData.path)
-                        .into(findViewById(R.id.image_view))
-                } else if (it.resultCode == Activity.RESULT_CANCELED) {
-                    //handle your own situation
-                }
+                //do stuffs with the image object
+                Glide.with(this)
+                    .load(basicImageData.path)
+                    .into(findViewById(R.id.image_view))
+            } else if (it.resultCode == Activity.RESULT_CANCELED) {
+                //handle your own situation
             }
+
         }
 
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+
             if (it.resultCode == Activity.RESULT_OK) {
-                if (it.resultCode == Activity.RESULT_OK) {
 
-                    val basicImageData: BasicImageData =
-                        it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
+                val basicImageData: BasicImageData =
+                    it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
 
-                    //do stuffs with the image object
-                    Glide.with(this)
-                        .load(basicImageData.path)
-                        .into(findViewById(R.id.image_view))
-                } else if (it.resultCode == Activity.RESULT_CANCELED) {
-                    //handle your own situation
-                }
+                //do stuffs with the image object
+                Glide.with(this)
+                    .load(basicImageData.path)
+                    .into(findViewById(R.id.image_view))
+            } else if (it.resultCode == Activity.RESULT_CANCELED) {
+                //handle your own situation
             }
         }
 
     private val galleryVideoLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK) {
-                if (it.resultCode == Activity.RESULT_OK) {
 
-                    val basicImageData: BasicImageData =
-                        it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
+                val basicImageData: BasicImageData =
+                    it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
 
-                    Log.d("VIDEO_DATA", "name: ${basicImageData.name} path: ${basicImageData.path}")
+                Log.d("VIDEO_DATA", "name: ${basicImageData.name} path: ${basicImageData.path}")
 
-                } else if (it.resultCode == Activity.RESULT_CANCELED) {
-                    //handle your own situation
-                }
+            } else if (it.resultCode == Activity.RESULT_CANCELED) {
+                //handle your own situation
             }
+
         }
 
     private val multiImageLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK) {
-                if (it.resultCode == Activity.RESULT_OK) {
 
-                    val images: List<BasicImageData> =
-                        it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as List<BasicImageData>
+                val images: List<BasicImageData> =
+                    it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as List<BasicImageData>
 
-                    Log.d("MULTI_IMAGE_DATA", "size: ${images.size} images: $images")
+                Log.d("MULTI_IMAGE_DATA", "size: ${images.size} images: $images")
 
-                    //do stuffs with the image object
-                    Glide.with(this)
-                        .load(images[0].path)
-                        .into(findViewById(R.id.image_view))
+                //do stuffs with the image object
+                Glide.with(this)
+                    .load(images[0].path)
+                    .into(findViewById(R.id.image_view))
 
-                } else if (it.resultCode == Activity.RESULT_CANCELED) {
-                    //handle your own situation
-                }
+            } else if (it.resultCode == Activity.RESULT_CANCELED) {
+                //handle your own situation
             }
         }
 }

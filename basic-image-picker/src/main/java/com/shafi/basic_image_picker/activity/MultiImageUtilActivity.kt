@@ -52,7 +52,7 @@ class MultiImageUtilActivity : AppCompatActivity() {
                 .toolbarArrowColor(
                     ContextCompat.getColor(
                         this,
-                        R.color.basic_image_picker_toolbar_color
+                        R.color.basic_image_picker_toolbar_icon_color
                     )
                 ) // Toolbar 'up' arrow color
                 .includeVideo(false) // Show video on image picker
