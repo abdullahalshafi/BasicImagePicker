@@ -106,34 +106,54 @@ class MultiImageUtilActivity : AppCompatActivity() {
 
     private fun createAndLaunchMultiPicker() {
 
-        val imageRequest = if (config.maxImage != null) {
-            ActivityResultContracts.PickMultipleVisualMedia(config.maxImage!!)
+        if (config.maxImage != null && config.maxImage!! == 1) {
+            singleImageLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         } else {
-            ActivityResultContracts.PickMultipleVisualMedia()
-        }
-        val multiImageLauncher =
-            registerForActivityResult(imageRequest) { uris ->
-                if (uris.isNullOrEmpty().not()) {
-
-                    //startProgressBar(uris.size)
-                    for (uri in uris) {
-                        copyGalleryImageFileToInternalStorage(uri)
-                    }
-
-                    //isImageCopied.set(true)
-
-                    if (selectedImages.size == uris.size) {
-                        sendResultOkAndFinish()
-                    } else {
-                        sendResultCanceledAndFinish(true)
-                    }
-                } else {
-                    sendResultCanceledAndFinish(false)
-                }
+            val imageRequest = if (config.maxImage != null) {
+                ActivityResultContracts.PickMultipleVisualMedia(config.maxImage!!)
+            } else {
+                ActivityResultContracts.PickMultipleVisualMedia()
             }
+            val multiImageLauncher =
+                registerForActivityResult(imageRequest) { uris ->
+                    if (uris.isNullOrEmpty().not()) {
 
-        multiImageLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        //startProgressBar(uris.size)
+                        for (uri in uris) {
+                            copyGalleryImageFileToInternalStorage(uri)
+                        }
+
+                        //isImageCopied.set(true)
+
+                        if (selectedImages.size == uris.size) {
+                            sendResultOkAndFinish()
+                        } else {
+                            sendResultCanceledAndFinish(true)
+                        }
+                    } else {
+                        sendResultCanceledAndFinish(false)
+                    }
+                }
+
+            multiImageLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        }
     }
+
+    private val singleImageLauncher =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            if (uri != null) {
+
+                copyGalleryImageFileToInternalStorage(uri)
+
+                if (selectedImages.size == 1) {
+                    sendResultOkAndFinish()
+                } else {
+                    sendResultCanceledAndFinish(true)
+                }
+            } else {
+                sendResultCanceledAndFinish(false)
+            }
+        }
 
     private fun copyGalleryImageFileToInternalStorage(imageUri: Uri) {
         try {
