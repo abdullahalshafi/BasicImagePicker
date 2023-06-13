@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 
 import android.widget.Toast
@@ -196,10 +197,24 @@ class MultiImageUtilActivity : AppCompatActivity() {
 
             val images = ImagePicker.getImages(data)
 
-            for (image in images) {
-                selectedImages.add(BasicImageData(image.name, image.path, image.uri.toString()))
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+
+                for (image in images) {
+                    copyGalleryImageFileToInternalStorage(image.uri)
+                }
+
+                if (images.size == selectedImages.size) {
+                    sendResultOkAndFinish()
+                } else {
+                    sendResultCanceledAndFinish(true)
+                }
+            } else {
+
+                for (image in images) {
+                    selectedImages.add(BasicImageData(image.name, image.path, image.uri.toString()))
+                }
+                sendResultOkAndFinish()
             }
-            sendResultOkAndFinish()
         } else if (requestCode == IpCons.RC_IMAGE_PICKER && resultCode != Activity.RESULT_OK) {
             sendResultCanceledAndFinish(false)
         }

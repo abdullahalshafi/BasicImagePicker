@@ -184,10 +184,19 @@ class ImageUtilActivity : AppCompatActivity() {
         if (ImagePicker.shouldHandle(requestCode, resultCode, data)) {
 
             val image = ImagePicker.getFirstImageOrNull(data)
-            imageUri = image.uri
-            imageName = image.name
-            imagePath = image.path
-            sendResultOkAndFinish()
+
+            if(Build.VERSION.SDK_INT == Build.VERSION_CODES.Q){
+
+                imageUri = image.uri
+                copyGalleryImageFileToInternalStorage()
+
+            }else{
+
+                imageUri = image.uri
+                imageName = image.name
+                imagePath = image.path
+                sendResultOkAndFinish()
+            }
 
         } else if (requestCode == IpCons.RC_IMAGE_PICKER && resultCode != Activity.RESULT_OK) {
             sendResultCanceledAndFinish(false)
