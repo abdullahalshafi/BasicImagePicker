@@ -197,7 +197,7 @@ class MultiImageUtilActivity : AppCompatActivity() {
 
             val images = ImagePicker.getImages(data)
 
-            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
                 for (image in images) {
                     copyGalleryImageFileToInternalStorage(image.uri)

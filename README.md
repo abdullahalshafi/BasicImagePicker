@@ -22,7 +22,7 @@ allprojects {
 
 ```Kotlin
 dependencies {
-    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.1.2'
+    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.1.3'
 }
 ```
 

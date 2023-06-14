@@ -185,7 +185,7 @@ class ImageUtilActivity : AppCompatActivity() {
 
             val image = ImagePicker.getFirstImageOrNull(data)
 
-            if(Build.VERSION.SDK_INT == Build.VERSION_CODES.Q){
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
 
                 imageUri = image.uri
                 copyGalleryImageFileToInternalStorage()
