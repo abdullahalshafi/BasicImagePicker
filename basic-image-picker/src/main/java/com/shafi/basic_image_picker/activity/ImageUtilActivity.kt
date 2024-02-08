@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import com.shafi.basic_image_picker.model.BasicImageData
 import com.shafi.basic_image_picker.model.ImageUtilConfig
 import com.shafi.basic_image_picker.R
@@ -38,6 +39,7 @@ class ImageUtilActivity : AppCompatActivity() {
     private var imageName: String? = null
     private var imagePath: String? = null
     private var imageUri: Uri? = null
+    private var galleryUri: Uri? = null
 
     private var videoName: String? = null
     private var videoPath: String? = null
@@ -98,7 +100,12 @@ class ImageUtilActivity : AppCompatActivity() {
     //send result to activity for image
     private fun sendResultOkAndFinish() {
         if (imageName != null && imagePath != null && imageUri != null) {
-            val basicImageData = BasicImageData(imageName!!, imagePath!!, imageUri.toString())
+            val basicImageData = BasicImageData(
+                imageName!!,
+                imagePath!!,
+                imageUri.toString(),
+                galleryUri?.toString()
+            )
             val intent = Intent()
             setResult(
                 Activity.RESULT_OK,
@@ -113,7 +120,7 @@ class ImageUtilActivity : AppCompatActivity() {
     //send result to activity for video
     private fun sendVideoResultOkAndFinish() {
         if (videoName != null && videoPath != null && videoUri != null) {
-            val basicImageData = BasicImageData(videoName!!, videoPath!!, videoUri.toString())
+            val basicImageData = BasicImageData(videoName!!, videoPath!!, videoUri.toString(), null)
             val intent = Intent()
             setResult(
                 Activity.RESULT_OK,
@@ -185,12 +192,12 @@ class ImageUtilActivity : AppCompatActivity() {
 
             val image = ImagePicker.getFirstImageOrNull(data)
 
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
                 imageUri = image.uri
                 copyGalleryImageFileToInternalStorage()
 
-            }else{
+            } else {
 
                 imageUri = image.uri
                 imageName = image.name
@@ -286,6 +293,7 @@ class ImageUtilActivity : AppCompatActivity() {
             checkWritePermission() -> {
                 launchCamera()
             }
+
             ActivityCompat.shouldShowRequestPermissionRationale(
                 this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -296,6 +304,7 @@ class ImageUtilActivity : AppCompatActivity() {
                     getString(R.string.please_give_storage_permission)
                 ) { storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) }
             }
+
             else -> {
 
                 showPermissionAlert(
@@ -324,6 +333,7 @@ class ImageUtilActivity : AppCompatActivity() {
             checkCameraPermission() -> {
                 launchCamera()
             }
+
             ActivityCompat.shouldShowRequestPermissionRationale(
                 this,
                 Manifest.permission.CAMERA
@@ -334,6 +344,7 @@ class ImageUtilActivity : AppCompatActivity() {
                     getString(R.string.please_give_camera_permission)
                 ) { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
             }
+
             else -> {
 
                 showPermissionAlert(
@@ -399,11 +410,13 @@ class ImageUtilActivity : AppCompatActivity() {
                         Environment.DIRECTORY_DCIM + subDirectory
                     )
                 }
+
                 contentResolver.insert(collection, contentValues)?.also { uri ->
                     contentResolver.openOutputStream(uri)?.use { outputStream ->
                         contentResolver.openInputStream(imageUri!!)?.use { input ->
                             input.copyTo(outputStream)
                         }
+                        galleryUri = uri
                     }
                 }
             } catch (ex: IOException) {
@@ -426,6 +439,7 @@ class ImageUtilActivity : AppCompatActivity() {
                                 contentResolver.openInputStream(imageUri!!)
                                     ?.use { input -> input.copyTo(outputStream) }
                             }
+                            galleryUri = file.toUri()
                         }
                     }
                 }

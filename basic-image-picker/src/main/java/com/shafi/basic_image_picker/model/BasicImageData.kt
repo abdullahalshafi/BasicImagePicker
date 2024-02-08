@@ -6,6 +6,7 @@ import java.io.Serializable
 data class BasicImageData(
     val name: String,
     val path: String,
-    val uri: String
+    val uri: String,
+    val galleryUri: String?
 ): Serializable
 

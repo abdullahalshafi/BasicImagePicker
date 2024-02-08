@@ -3,16 +3,10 @@ package com.shafi.basic_image_picker.util
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import androidx.activity.result.ActivityResultLauncher
 import com.shafi.basic_image_picker.activity.ImageUtilActivity
 import com.shafi.basic_image_picker.activity.MultiImageUtilActivity
 import com.shafi.basic_image_picker.model.ImageUtilConfig
-import id.zelory.compressor.Compressor
-import id.zelory.compressor.constraint.format
-import id.zelory.compressor.constraint.quality
-import id.zelory.compressor.constraint.resolution
-import java.io.File
 
 class ImageUtilHelper(
     private var context: Context,
@@ -30,22 +24,6 @@ class ImageUtilHelper(
             imageUtil: ImageUtilHelper.() -> Unit
         ): ImageUtilHelper {
             return ImageUtilHelper(context, intentLauncher).apply(imageUtil)
-        }
-
-        suspend fun compressImage(
-            context: Context,
-            file: File,
-            quality: Int = 80,
-            width: Int = -1,
-            height: Int = -1
-        ): File {
-            return Compressor.compress(context, file) {
-                if (width != -1 && height != -1) {
-                    resolution(width, height)
-                }
-                quality(quality)
-                format(Bitmap.CompressFormat.JPEG)
-            }
         }
     }
 

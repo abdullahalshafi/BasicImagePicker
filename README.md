@@ -22,7 +22,7 @@ allprojects {
 
 ```Kotlin
 dependencies {
-    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.1.3'
+    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.1.4'
 }
 ```
 
@@ -144,12 +144,6 @@ private val multiImageLauncher =
             //handle your own situation
         }
     }
-```
-
-#### Compress Image using zetbaitsu Compressor
-
-```kotlin
-val file = ImageUtilHelper.compressImage(this@MainActivity, file, 50, 300, 300)
 ```
 
 

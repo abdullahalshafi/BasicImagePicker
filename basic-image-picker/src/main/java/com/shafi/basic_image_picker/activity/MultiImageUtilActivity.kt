@@ -175,7 +175,8 @@ class MultiImageUtilActivity : AppCompatActivity() {
                                 BasicImageData(
                                     imageName,
                                     imagePath,
-                                    imageUri.toString()
+                                    imageUri.toString(),
+                                    null
                                 )
                             )
 
@@ -211,7 +212,7 @@ class MultiImageUtilActivity : AppCompatActivity() {
             } else {
 
                 for (image in images) {
-                    selectedImages.add(BasicImageData(image.name, image.path, image.uri.toString()))
+                    selectedImages.add(BasicImageData(image.name, image.path, image.uri.toString(), null))
                 }
                 sendResultOkAndFinish()
             }
