@@ -17,10 +17,16 @@
     <color name="ef_black_alpha_aa">#AA000000</color>
     <color name="ef_teal">#009688</color>
 
-    <color name="basic_image_picker_toolbar_icon_color">#FFFFFF</color>
-    <color name="basic_image_picker_colorPrimary">#3F51B5</color>
-    <color name="basic_image_picker_colorPrimaryDark">#303F9F</color>
+    <!--
+        Sentinel #01000001 means "consumer did not override this color".
+        ImageUtilHelper compares against this sentinel at runtime; anything else is treated
+        as an explicit override and takes priority over the auto-derived theme colors.
+        Real fallbacks live inline in ef_AppTheme (styles.xml).
+    -->
+    <color name="basic_image_picker_toolbar_icon_color">#01000001</color>
+    <color name="basic_image_picker_colorPrimary">#01000001</color>
+    <color name="basic_image_picker_colorPrimaryDark">#01000001</color>
     <color name="basic_image_picker_colorAccent">#FF4081</color>
-    <color name="basic_image_picker_colorTextPrimary">#FFFFFF</color>
+    <color name="basic_image_picker_colorTextPrimary">#01000001</color>
 
 </resources>

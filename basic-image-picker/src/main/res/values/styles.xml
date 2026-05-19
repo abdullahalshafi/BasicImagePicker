@@ -17,8 +17,10 @@
     </style>
 
     <style name="ef_AppTheme" parent="ef_BaseTheme">
-        <item name="colorPrimary">@color/ef_colorPrimary</item>
-        <item name="colorPrimaryDark">@color/ef_colorPrimaryDark</item>
+        <!-- Hardcoded so this theme has a usable fallback even when consumers haven't overridden
+             basic_image_picker_colorPrimary (which is now a sentinel value — see colors.xml). -->
+        <item name="colorPrimary">#3F51B5</item>
+        <item name="colorPrimaryDark">#303F9F</item>
         <item name="colorAccent">@color/ef_colorAccent</item>
     </style>
 

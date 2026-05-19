@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.shafi.basic_image_picker.R
 import com.shafi.basic_image_picker.model.BasicImageData
@@ -63,13 +62,8 @@ class MultiImageUtilActivity : AppCompatActivity() {
 
             config.toolbarColor?.let { imagePicker.toolbarColor(it) }
             config.statusBarColor?.let { imagePicker.statusBarColor(it) }
-            if (config.toolbarOnColor != null) {
-                imagePicker.toolbarTextColor(config.toolbarOnColor!!)
-            } else {
-                imagePicker.toolbarArrowColor(
-                    ContextCompat.getColor(this, R.color.basic_image_picker_toolbar_icon_color)
-                )
-            }
+            config.toolbarOnColor?.let { imagePicker.toolbarTextColor(it) }
+            config.arrowColor?.let { imagePicker.toolbarArrowColor(it) }
 
             imagePicker.start()
         }

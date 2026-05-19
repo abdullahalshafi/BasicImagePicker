@@ -11,8 +11,10 @@ data class ImageUtilConfig(
     var galleryDirectory: String = "",
     var isMulti: Boolean = false,
     var maxImage: Int? = null,
-    // Auto-derived from the calling activity's theme so the esafirm picker chrome matches.
+    // Auto-derived from the calling activity's theme (or overridden via colors.xml) so the
+    // esafirm picker chrome matches the host app.
     var toolbarColor: Int? = null,
     var statusBarColor: Int? = null,
-    var toolbarOnColor: Int? = null
+    var toolbarOnColor: Int? = null,
+    var arrowColor: Int? = null
 ): Serializable

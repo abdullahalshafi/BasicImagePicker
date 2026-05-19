@@ -1,149 +1,193 @@
 # Basic Image Picker
 
-A Simple Android Library to capture and pick image from gallery.
+A small Android library for taking photos with the camera or picking images / videos from
+the device. Uses the system photo picker on Android 11+ (and any device with the Play
+Picker module) and falls back to the bundled
+[esafirm/android-image-picker](https://github.com/esafirm/android-image-picker) UI on older
+devices. Supports single, multi-select, and video picks.
 
-Added support for multiple image pick. This library uses @esafirm android-image-picker library for
-below API level 30 and new photo picker for newer versions.
+- Min SDK 21, target SDK 35
+- Kotlin + Java 17
+- Returns a `BasicImageData` with `name`, durable `path`, content `uri`, and (camera-only)
+  gallery `uri`
 
-### Step 1. Add the JitPack repository to your build file
+---
 
-Add it in your root build.gradle at the end of repositories:
+## Install
 
-```Kotlin
-allprojects {
+`settings.gradle` (or root `build.gradle`):
+
+```kotlin
+dependencyResolutionManagement {
     repositories {
-        ...
-        maven { url 'https://jitpack.io' }
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
     }
 }
 ```
 
-### Step 2. Add the dependency
+Module `build.gradle`:
 
-```Kotlin
+```kotlin
 dependencies {
-    implementation 'com.github.abdullahalshafi:BasicImagePicker:1.1.6'
+    implementation("com.github.abdullahalshafi:BasicImagePicker:1.1.7")
 }
 ```
 
-### Usage
+If you launch the camera flow, add `android.permission.CAMERA` to your `AndroidManifest.xml`
+(the library handles the runtime prompt). No other permissions required — the system photo
+picker and scoped MediaStore handle the rest.
 
-#### Camera
+---
+
+## Quick start
+
+Every flow follows the same shape: register an `ActivityResultLauncher`, configure
+`ImageUtilHelper`, and read `BasicImageData` from the result.
+
+### Camera
 
 ```kotlin
- ImageUtilHelper.create(this, cameraLauncher) {
+private val cameraLauncher = registerForActivityResult(
+    ActivityResultContracts.StartActivityForResult()
+) { result ->
+    if (result.resultCode == Activity.RESULT_OK) {
+        val image = result.data!!.getSerializableExtra(
+            BasicImageData::class.java.simpleName
+        ) as BasicImageData
+        // image.path → local File path, image.uri → content URI,
+        // image.galleryUri → MediaStore URI when saveIntoGallery(true)
+    }
+}
+
+ImageUtilHelper.create(this, cameraLauncher) {
     isCamera(true)
-    saveIntoGallery(true)
-    galleryDirectoryName("MyDirectory")
+    saveIntoGallery(true)            // optional: also write a copy into DCIM
+    galleryDirectoryName("MyApp")    // optional: DCIM/MyApp/<name>.jpg
     start()
 }
 ```
 
-#### Gallery
+### Gallery (single image)
 
 ```kotlin
- ImageUtilHelper.create(this, galleryLauncher) {
+ImageUtilHelper.create(this, galleryLauncher) {
     isGallery(true)
     start()
 }
+```
+
+### Gallery (multiple images)
+
+```kotlin
+ImageUtilHelper.create(this, multiImageLauncher) {
+    multi()
+    maxImage(5)   // optional cap; omit for system max
+    start()
+}
+```
+
+Reading multi-pick results:
+
+```kotlin
+@Suppress("UNCHECKED_CAST")
+val images = result.data!!.getSerializableExtra(
+    BasicImageData::class.java.simpleName
+) as List<BasicImageData>
 ```
 
 ### Video
 
-```Kotlin
- ImageUtilHelper.create(this, galleryVideoLauncher) {
+```kotlin
+ImageUtilHelper.create(this, galleryVideoLauncher) {
     isGallery(true)
     isOnlyVideo(true)
-    setVideoSizeLimitInMB(10)
+    setVideoSizeLimitInMB(10)   // optional; picker re-launches if over limit
     start()
 }
 ```
 
-### Multiple Image
+Result shape is identical to a single image (`BasicImageData`); `path` points at a real
+file copy in your app's cache so you can upload or play it.
 
-```Kotlin
- ImageUtilHelper.create(this, multiImageLauncher) {
-    multi()
-    maxImage(5)
-    start()
-}
+---
+
+## Customizing colors
+
+The library applies colors in the following precedence (highest wins):
+
+1. **`colors.xml` override** in your app.
+2. **Calling activity's theme** (`colorPrimary`) — auto-derived.
+3. **Bundled defaults** (indigo).
+
+### 1. Override via `colors.xml`
+
+Define any of these in your app's `res/values/colors.xml`. Each is independent — set only
+what you want to change.
+
+```xml
+<resources>
+    <!-- Toolbar background -->
+    <color name="basic_image_picker_colorPrimary">#1976D2</color>
+    <!-- Status bar -->
+    <color name="basic_image_picker_colorPrimaryDark">#0D47A1</color>
+    <!-- Toolbar title text -->
+    <color name="basic_image_picker_colorTextPrimary">#FFFFFF</color>
+    <!-- Back-arrow tint -->
+    <color name="basic_image_picker_toolbar_icon_color">#FFFFFF</color>
+    <!-- Selection / checkbox accent -->
+    <color name="basic_image_picker_colorAccent">#FF4081</color>
+</resources>
 ```
 
-#### Camera Result
+Any color you don't define falls through to step 2.
 
-```kotlin
-private val cameraLauncher =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+### 2. Auto-derive from your theme
 
-        if (it.resultCode == Activity.RESULT_OK) {
+If you don't override anything, the library reads `colorPrimary` from your calling
+activity's theme and derives the rest:
 
-            val image: BasicImageData =
-                it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
+- toolbar background ← `colorPrimary`
+- status bar ← darkened `colorPrimary`
+- toolbar text / arrow ← black or white depending on `colorPrimary`'s luminance
 
-            //do stuffs with the image object
-        } else if (it.resultCode == Activity.RESULT_CANCELED) {
-            //handle your own situation
-        }
+No setup required — just use a standard `Theme.MaterialComponents.*` / `Theme.AppCompat.*`
+host with `colorPrimary` set.
 
-    }
-```
+### 3. Bundled fallback
 
-#### Gallery Result
+If your theme has no `colorPrimary` and you haven't overridden anything, the picker uses
+its bundled indigo defaults (`#3F51B5` / `#303F9F`).
 
-```kotlin
-private val galleryLauncher =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (it.resultCode == Activity.RESULT_OK) {
+---
 
-            val image: BasicImageData =
-                it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
+## API reference
 
-            //do stuffs with the image object
-        } else if (it.resultCode == Activity.RESULT_CANCELED) {
-            //handle your own situation
-        }
-    }
-```
+`ImageUtilHelper.create(context, launcher) { … }` builder DSL:
 
-#### Gallery Video Result
+| Method | Description |
+| --- | --- |
+| `isCamera(true)` | Capture a new photo with the camera. |
+| `isGallery(true)` | Pick from the gallery. |
+| `isOnlyVideo(true)` | Restrict gallery picker to videos. |
+| `setVideoSizeLimitInMB(n)` | Reject videos larger than `n` MB and re-launch the picker. |
+| `saveIntoGallery(true)` | After camera capture, also save a copy into the public gallery. |
+| `galleryDirectoryName("Name")` | Subdirectory under DCIM when `saveIntoGallery(true)`. |
+| `multi()` | Multi-image pick mode. |
+| `maxImage(n)` | Cap on number of images in multi mode. |
+| `start()` | Launch the picker. |
 
-```kotlin
-private val galleryVideoLauncher =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+`BasicImageData` (Serializable):
 
-        if (it.resultCode == Activity.RESULT_OK) {
-            val basicImageData: BasicImageData =
-                it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as BasicImageData
+| Field | Notes |
+| --- | --- |
+| `name: String` | Generated filename, e.g. `4f7a-….jpg`. |
+| `path: String` | Absolute path inside app cache. Always populated. |
+| `uri: String` | Content URI of the cache copy (FileProvider). |
+| `galleryUri: String?` | MediaStore URI of the gallery copy (camera + `saveIntoGallery` only). |
 
-            Log.d("VIDEO_DATA", "name: ${basicImageData.name} path: ${basicImageData.path}")
+---
 
-        } else if (it.resultCode == Activity.RESULT_CANCELED) {
-            //handle your own situation
-        }
-    }
-```
+## License
 
-#### Multi Image Result
-
-```kotlin
-private val multiImageLauncher =
-    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        if (it.resultCode == Activity.RESULT_OK) {
-
-            val images: List<BasicImageData> =
-                it.data!!.getSerializableExtra(BasicImageData::class.java.simpleName) as List<BasicImageData>
-
-            Log.d("MULTI_IMAGE_DATA", "images: $images")
-
-            //do stuffs with the image object
-            Glide.with(this)
-                .load(images[0].path)
-                .into(findViewById(R.id.image_view))
-
-        } else if (it.resultCode == Activity.RESULT_CANCELED) {
-            //handle your own situation
-        }
-    }
-```
-
-
+MIT. Bundles a fork of [esafirm/android-image-picker](https://github.com/esafirm/android-image-picker).

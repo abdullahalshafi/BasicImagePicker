@@ -86,14 +86,8 @@ class ImageUtilActivity : AppCompatActivity() {
                     .enableLog(false)
                 config.toolbarColor?.let { picker.toolbarColor(it) }
                 config.statusBarColor?.let { picker.statusBarColor(it) }
-                if (config.toolbarOnColor != null) {
-                    picker.toolbarTextColor(config.toolbarOnColor!!)
-                } else {
-                    // Caller's theme didn't provide a color; keep the pre-existing arrow tint.
-                    picker.toolbarArrowColor(
-                        ContextCompat.getColor(this, R.color.basic_image_picker_toolbar_icon_color)
-                    )
-                }
+                config.toolbarOnColor?.let { picker.toolbarTextColor(it) }
+                config.arrowColor?.let { picker.toolbarArrowColor(it) }
                 picker.start()
             }
         } else {
