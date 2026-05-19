@@ -21,16 +21,19 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import com.shafi.basic_image_picker.model.BasicImageData
 import com.shafi.basic_image_picker.model.ImageUtilConfig
 import com.shafi.basic_image_picker.R
 import com.shafi.basic_image_picker.util.ImageUtilHelper.Companion.PACKAGE_NAME
 import imagepicker.features.ImagePicker
 import imagepicker.features.IpCons
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
-import java.util.*
+import java.util.UUID
 
 class ImageUtilActivity : AppCompatActivity() {
 
@@ -51,8 +54,7 @@ class ImageUtilActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         callingPackageName = intent.getStringExtra(PACKAGE_NAME)
-        config =
-            intent.getSerializableExtra(ImageUtilConfig::class.java.simpleName) as ImageUtilConfig
+        config = readConfig()
 
         if (config.isCamera) {
 
@@ -61,9 +63,7 @@ class ImageUtilActivity : AppCompatActivity() {
                     launchCamera()
                     return
                 }
-                if (!checkWritePermission()) {
-                    storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                }
+                storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 return
             }
             launchCamera()
@@ -94,6 +94,16 @@ class ImageUtilActivity : AppCompatActivity() {
             }
         } else {
             throw IllegalArgumentException(getString(R.string.you_must_specify_camera_or_gallery))
+        }
+    }
+
+    @Suppress("DEPRECATION", "UNCHECKED_CAST")
+    private fun readConfig(): ImageUtilConfig {
+        val key = ImageUtilConfig::class.java.simpleName
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra(key, ImageUtilConfig::class.java)!!
+        } else {
+            intent.getSerializableExtra(key) as ImageUtilConfig
         }
     }
 
@@ -151,6 +161,7 @@ class ImageUtilActivity : AppCompatActivity() {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
             return
         }
+
         imageUri = createEmptyFileAndGetUri()
         if (imageUri != null) {
             cameraLauncher.launch(imageUri)
@@ -165,9 +176,13 @@ class ImageUtilActivity : AppCompatActivity() {
 
             if (success && imageUri != null) {
                 if (config.saveIntoGallery) {
-                    saveImageToGallery()
+                    lifecycleScope.launch {
+                        saveImageToGallery()
+                        sendResultOkAndFinish()
+                    }
+                } else {
+                    sendResultOkAndFinish()
                 }
-                sendResultOkAndFinish()
             } else {
                 sendResultCanceledAndFinish(false)
             }
@@ -178,7 +193,16 @@ class ImageUtilActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
                 imageUri = uri
-                copyGalleryImageFileToInternalStorage()
+                lifecycleScope.launch {
+                    imageName = "${UUID.randomUUID()}.jpg"
+                    val path = copyUriToCache(uri, imageName!!)
+                    if (path != null) {
+                        imagePath = path
+                        sendResultOkAndFinish()
+                    } else {
+                        sendResultCanceledAndFinish(true)
+                    }
+                }
             } else {
                 sendResultCanceledAndFinish(false)
             }
@@ -195,7 +219,16 @@ class ImageUtilActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
                 imageUri = image.uri
-                copyGalleryImageFileToInternalStorage()
+                lifecycleScope.launch {
+                    imageName = "${UUID.randomUUID()}.jpg"
+                    val path = copyUriToCache(image.uri, imageName!!)
+                    if (path != null) {
+                        imagePath = path
+                        sendResultOkAndFinish()
+                    } else {
+                        sendResultCanceledAndFinish(true)
+                    }
+                }
 
             } else {
 
@@ -214,23 +247,30 @@ class ImageUtilActivity : AppCompatActivity() {
     private val galleryVideoLauncher =
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
-
-                val videoFileName = checkVideoFileSizeAndGetFileName(uri)
-
-                //if size limit exceeded
-                if (videoFileName?.isEmpty() == true) {
-                    return@registerForActivityResult
-                }
-
-                //if something went wrong
-                if (videoFileName == null) {
-                    sendResultCanceledAndFinish(true)
-                    return@registerForActivityResult
-                }
-
                 videoUri = uri
-                videoName = videoFileName
-                copyGalleryVideoFileToInternalStorage()
+                lifecycleScope.launch {
+                    val videoFileName = checkVideoFileSizeAndGetFileName(uri)
+
+                    //if size limit exceeded
+                    if (videoFileName == "") {
+                        return@launch
+                    }
+
+                    //if something went wrong
+                    if (videoFileName == null) {
+                        sendResultCanceledAndFinish(true)
+                        return@launch
+                    }
+
+                    videoName = videoFileName
+                    val path = copyUriToCache(uri, videoFileName)
+                    if (path != null) {
+                        videoPath = path
+                        sendVideoResultOkAndFinish()
+                    } else {
+                        sendResultCanceledAndFinish(true)
+                    }
+                }
             } else {
                 sendResultCanceledAndFinish(false)
             }
@@ -390,15 +430,18 @@ class ImageUtilActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun saveImageToGallery() {
-
+    /**
+     * Copy the cache file produced by the camera into the gallery. On Q+ this inserts into
+     * MediaStore via ContentResolver (the canonical scoped-storage pattern); pre-Q writes
+     * directly into DCIM/<galleryDirectory>.
+     */
+    private suspend fun saveImageToGallery(): Unit = withContext(Dispatchers.IO) {
         val subDirectory = if (config.galleryDirectory.isNotEmpty()) {
             File.separator + config.galleryDirectory
         } else {
             ""
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
             try {
                 val collection =
                     MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
@@ -410,7 +453,6 @@ class ImageUtilActivity : AppCompatActivity() {
                         Environment.DIRECTORY_DCIM + subDirectory
                     )
                 }
-
                 contentResolver.insert(collection, contentValues)?.also { uri ->
                     contentResolver.openOutputStream(uri)?.use { outputStream ->
                         contentResolver.openInputStream(imageUri!!)?.use { input ->
@@ -419,7 +461,7 @@ class ImageUtilActivity : AppCompatActivity() {
                         galleryUri = uri
                     }
                 }
-            } catch (ex: IOException) {
+            } catch (ex: Exception) {
                 ex.printStackTrace()
             }
         } else {
@@ -429,19 +471,16 @@ class ImageUtilActivity : AppCompatActivity() {
                         .toString() + subDirectory
                 )
                 if (!directory.exists()) {
-                    directory.mkdir()
+                    directory.mkdirs()
                 }
                 val file = File(directory, imageName!!)
                 if (!file.exists()) {
-                    file.createNewFile().also { status ->
-                        if (status) {
-                            FileOutputStream(file).use { outputStream ->
-                                contentResolver.openInputStream(imageUri!!)
-                                    ?.use { input -> input.copyTo(outputStream) }
-                            }
-                            galleryUri = file.toUri()
+                    FileOutputStream(file).use { outputStream ->
+                        contentResolver.openInputStream(imageUri!!)?.use { input ->
+                            input.copyTo(outputStream)
                         }
                     }
+                    galleryUri = file.toUri()
                 }
             } catch (ex: Exception) {
                 ex.printStackTrace()
@@ -449,130 +488,74 @@ class ImageUtilActivity : AppCompatActivity() {
         }
     }
 
-    private fun copyGalleryImageFileToInternalStorage() {
-
-        try {
-            imageName = "${UUID.randomUUID()}.jpg"
-            val file = File(cacheDir, imageName!!)
-
-            if (!file.exists()) {
-                file.createNewFile().also { status ->
-                    if (status) {
-                        try {
-                            FileOutputStream(file).use { outputStream ->
-                                contentResolver.openInputStream(imageUri!!)?.use { input ->
-                                    input.copyTo(outputStream)
-                                }
-                            }
-                            imagePath = file.absolutePath
-                            sendResultOkAndFinish()
-                        } catch (ex: IOException) {
-                            ex.printStackTrace()
-                            sendResultCanceledAndFinish(true)
-                        }
-                    } else {
-                        sendResultCanceledAndFinish(true)
-                    }
+    /** Copy a content URI into cacheDir so callers receive a durable File path. */
+    private suspend fun copyUriToCache(uri: Uri, fileName: String): String? =
+        withContext(Dispatchers.IO) {
+            try {
+                val file = File(cacheDir, fileName)
+                FileOutputStream(file).use { outputStream ->
+                    val input = contentResolver.openInputStream(uri)
+                        ?: return@withContext null
+                    input.use { it.copyTo(outputStream) }
                 }
-            } else {
-                sendResultCanceledAndFinish(true)
+                file.absolutePath
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+                null
             }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            sendResultCanceledAndFinish(true)
         }
-    }
 
     private fun createEmptyFileAndGetUri(): Uri? {
-        try {
+        return try {
             imageName = "${UUID.randomUUID()}.jpg"
             val file = File(cacheDir, imageName!!)
-
-            if (!file.exists()) {
-                file.createNewFile().also {
-                    if (it) {
-                        imagePath = file.absolutePath
-                        return FileProvider.getUriForFile(
-                            this,
-                            "${callingPackageName}.basicimagepicker.fileprovider",
-                            file
-                        )
-                    } else {
-                        sendResultCanceledAndFinish(true)
-                    }
-                }
-            } else {
-                sendResultCanceledAndFinish(true)
-            }
+            imagePath = file.absolutePath
+            FileProvider.getUriForFile(
+                this,
+                "${callingPackageName}.basicimagepicker.fileprovider",
+                file
+            )
         } catch (ex: Exception) {
             ex.printStackTrace()
-        }
-        return null
-    }
-
-    private fun copyGalleryVideoFileToInternalStorage() {
-
-        try {
-            val file = File(cacheDir, videoName!!)
-            if (!file.exists()) {
-                file.createNewFile().also { status ->
-                    if (status) {
-                        try {
-                            FileOutputStream(file).use { outputStream ->
-                                contentResolver.openInputStream(videoUri!!)?.use { input ->
-                                    input.copyTo(outputStream)
-                                }
-                            }
-                            videoPath = file.absolutePath
-                            sendVideoResultOkAndFinish()
-                        } catch (ex: IOException) {
-                            ex.printStackTrace()
-                            sendResultCanceledAndFinish(true)
-                        }
-                    } else {
-                        sendResultCanceledAndFinish(true)
-                    }
-                }
-            } else {
-                sendResultCanceledAndFinish(true)
-            }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            sendResultCanceledAndFinish(true)
+            null
         }
     }
 
-    private fun checkVideoFileSizeAndGetFileName(videoFileUri: Uri): String? {
+    /**
+     * Returns the generated file name, "" if the user picked a video over the size limit
+     * (picker is re-launched), or null on error.
+     */
+    private suspend fun checkVideoFileSizeAndGetFileName(videoFileUri: Uri): String? {
+        data class VideoMeta(val extension: String, val size: Long)
 
-        val cursorUri = contentResolver.query(videoFileUri, null, null, null, null)
-
-        cursorUri?.let { cursor ->
-
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-            cursor.moveToFirst()
-            var fileNameExtension = cursor.getString(nameIndex).substringAfterLast('.')
-            val fileSize = cursor.getLong(sizeIndex)
-            cursor.close()
-
-            //if video size is required
-            if (config.videoSizeLimit != null) {
-
-                val sizeLimitInLong: Long = (config.videoSizeLimit!! * 1024 * 1024).toLong()
-                if (fileSize > sizeLimitInLong) {
-                    Toast.makeText(
-                        this,
-                        "Video size should not exceed ${config.videoSizeLimit} MB",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    galleryVideoLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly))
-                    return ""
+        val meta = withContext(Dispatchers.IO) {
+            runCatching {
+                contentResolver.query(videoFileUri, null, null, null, null)?.use { cursor ->
+                    if (!cursor.moveToFirst()) return@runCatching null
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+                    if (nameIndex < 0 || sizeIndex < 0) return@runCatching null
+                    val ext = cursor.getString(nameIndex)?.substringAfterLast('.', "")
+                        ?: return@runCatching null
+                    VideoMeta(ext, cursor.getLong(sizeIndex))
                 }
-            }
-            fileNameExtension = "${UUID.randomUUID()}.$fileNameExtension"
-            return fileNameExtension
-        }
+            }.getOrNull()
+        } ?: return null
 
-        return null
+        config.videoSizeLimit?.let { limitMb ->
+            val limitBytes = limitMb.toLong() * 1024L * 1024L
+            if (meta.size > limitBytes) {
+                Toast.makeText(
+                    this,
+                    "Video size should not exceed $limitMb MB",
+                    Toast.LENGTH_LONG
+                ).show()
+                galleryVideoLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)
+                )
+                return ""
+            }
+        }
+        return "${UUID.randomUUID()}.${meta.extension}"
     }
 }

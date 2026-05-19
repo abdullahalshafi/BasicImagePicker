@@ -2,27 +2,30 @@ package com.shafi.basic_image_picker.activity
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-
+import androidx.lifecycle.lifecycleScope
 import com.shafi.basic_image_picker.R
 import com.shafi.basic_image_picker.model.BasicImageData
 import com.shafi.basic_image_picker.model.ImageUtilConfig
 import imagepicker.features.ImagePicker
 import imagepicker.features.IpCons
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
-import java.util.*
+import java.util.UUID
 
 
 /**
@@ -34,14 +37,13 @@ class MultiImageUtilActivity : AppCompatActivity() {
 
     private var selectedImages: MutableList<BasicImageData> = mutableListOf()
 
-    //private var isImageCopied: AtomicBoolean = AtomicBoolean(false)
-    //private var progressDialog: BasicProgressDialog? = null
+    /** Caps concurrent copies to avoid OOM when the user picks many large images. */
+    private val copySemaphore = Semaphore(MAX_PARALLEL_COPIES)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        config =
-            intent.getSerializableExtra(ImageUtilConfig::class.java.simpleName) as ImageUtilConfig
+        config = readConfig()
 
         if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(this)) {
             createAndLaunchMultiPicker()
@@ -68,42 +70,15 @@ class MultiImageUtilActivity : AppCompatActivity() {
         }
     }
 
-//    private fun startProgressBar(uriSize: Int) {
-//
-//        Thread(Runnable {
-//
-//            while (true) {
-//
-//                Handler(Looper.getMainLooper()).post {
-//
-//                    progressDialog = BasicProgressDialog(this)
-//                    progressDialog?.show()
-//                }
-//
-//                try {
-//                    Thread.sleep(5000)
-//                } catch (e: InterruptedException) {
-//                    return@Runnable
-//                }
-//
-//                if (isImageCopied.get()) {
-//                    stopProgressBarAndSendResult(uriSize)
-//                    return@Runnable
-//                }
-//            }
-//        }).start()
-//    }
-//
-//    private fun stopProgressBarAndSendResult(uriSize: Int) {
-//        Handler(Looper.getMainLooper()).post {
-//            progressDialog?.dismiss()
-//            if (selectedImages.size == uriSize) {
-//                sendResultOkAndFinish()
-//            } else {
-//                sendResultCanceledAndFinish(true)
-//            }
-//        }
-//    }
+    @Suppress("DEPRECATION", "UNCHECKED_CAST")
+    private fun readConfig(): ImageUtilConfig {
+        val key = ImageUtilConfig::class.java.simpleName
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra(key, ImageUtilConfig::class.java)!!
+        } else {
+            intent.getSerializableExtra(key) as ImageUtilConfig
+        }
+    }
 
     private fun createAndLaunchMultiPicker() {
 
@@ -118,19 +93,7 @@ class MultiImageUtilActivity : AppCompatActivity() {
             val multiImageLauncher =
                 registerForActivityResult(imageRequest) { uris ->
                     if (uris.isNullOrEmpty().not()) {
-
-                        //startProgressBar(uris.size)
-                        for (uri in uris) {
-                            copyGalleryImageFileToInternalStorage(uri)
-                        }
-
-                        //isImageCopied.set(true)
-
-                        if (selectedImages.size == uris.size) {
-                            sendResultOkAndFinish()
-                        } else {
-                            sendResultCanceledAndFinish(true)
-                        }
+                        copyAllAndReturn(uris)
                     } else {
                         sendResultCanceledAndFinish(false)
                     }
@@ -143,51 +106,48 @@ class MultiImageUtilActivity : AppCompatActivity() {
     private val singleImageLauncher =
         registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             if (uri != null) {
-
-                copyGalleryImageFileToInternalStorage(uri)
-
-                if (selectedImages.size == 1) {
-                    sendResultOkAndFinish()
-                } else {
-                    sendResultCanceledAndFinish(true)
-                }
+                copyAllAndReturn(listOf(uri))
             } else {
                 sendResultCanceledAndFinish(false)
             }
         }
 
-    private fun copyGalleryImageFileToInternalStorage(imageUri: Uri) {
-        try {
+    /**
+     * Copy every picked URI into cacheDir in parallel (off the main thread) and deliver the
+     * result. Preserves the user's selection order. If any single copy fails the whole pick is
+     * cancelled to match the prior behavior.
+     */
+    private fun copyAllAndReturn(uris: List<Uri>) {
+        lifecycleScope.launch {
+            val results: List<BasicImageData?> = withContext(Dispatchers.IO) {
+                uris.map { uri ->
+                    async { copySemaphore.withPermit { copyUriToCache(uri) } }
+                }.awaitAll()
+            }
+
+            if (results.any { it == null }) {
+                sendResultCanceledAndFinish(true)
+                return@launch
+            }
+            selectedImages.clear()
+            selectedImages.addAll(results.filterNotNull())
+            sendResultOkAndFinish()
+        }
+    }
+
+    private fun copyUriToCache(imageUri: Uri): BasicImageData? {
+        return try {
             val imageName = "${UUID.randomUUID()}.jpg"
             val file = File(cacheDir, imageName)
-
-            if (!file.exists()) {
-                file.createNewFile().also { status ->
-                    if (status) {
-                        try {
-                            FileOutputStream(file).use { outputStream ->
-                                contentResolver.openInputStream(imageUri)?.use { input ->
-                                    input.copyTo(outputStream)
-                                }
-                            }
-                            val imagePath = file.absolutePath
-                            selectedImages.add(
-                                BasicImageData(
-                                    imageName,
-                                    imagePath,
-                                    imageUri.toString(),
-                                    null
-                                )
-                            )
-
-                        } catch (ex: IOException) {
-                            ex.printStackTrace()
-                        }
-                    }
-                }
+            FileOutputStream(file).use { outputStream ->
+                val input = contentResolver.openInputStream(imageUri)
+                    ?: return null
+                input.use { it.copyTo(outputStream) }
             }
+            BasicImageData(imageName, file.absolutePath, imageUri.toString(), null)
         } catch (ex: Exception) {
             ex.printStackTrace()
+            null
         }
     }
 
@@ -200,15 +160,8 @@ class MultiImageUtilActivity : AppCompatActivity() {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 
-                for (image in images) {
-                    copyGalleryImageFileToInternalStorage(image.uri)
-                }
+                copyAllAndReturn(images.map { it.uri })
 
-                if (images.size == selectedImages.size) {
-                    sendResultOkAndFinish()
-                } else {
-                    sendResultCanceledAndFinish(true)
-                }
             } else {
 
                 for (image in images) {
@@ -250,5 +203,9 @@ class MultiImageUtilActivity : AppCompatActivity() {
         }
         setResult(Activity.RESULT_CANCELED)
         finish()
+    }
+
+    private companion object {
+        const val MAX_PARALLEL_COPIES = 4
     }
 }
