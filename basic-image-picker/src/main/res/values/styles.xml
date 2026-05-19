@@ -25,8 +25,12 @@
     </style>
 
     <style name="ef_CustomToolbarTheme" parent="Base.ThemeOverlay.AppCompat.ActionBar">
-        <item name="android:textColorPrimary">@color/ef_colorTextPrimary</item>
-        <item name="actionMenuTextColor">@color/ef_colorTextPrimary</item>
+        <!-- Hardcoded so the toolbar fallback (no resource override, no theme-derived
+             programmatic color) is still visible. The override-detection resource
+             basic_image_picker_colorTextPrimary is a sentinel and must NOT be used for theme
+             defaults — see colors.xml. Programmatic toolbar.setTitleTextColor still wins. -->
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="actionMenuTextColor">#FFFFFF</item>
     </style>
 
 </resources>
