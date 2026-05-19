@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.FrameLayout;
@@ -103,7 +105,15 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
 
         MenuItem menuDone = menu.findItem(R.id.menu_done);
         if (menuDone != null) {
-            menuDone.setTitle(ConfigUtils.getDoneButtonText(this, config));
+            CharSequence title = ConfigUtils.getDoneButtonText(this, config);
+            int textColor = config != null ? config.getToolbarTextColor() : ImagePickerConfig.NO_COLOR;
+            if (textColor != ImagePickerConfig.NO_COLOR && title != null) {
+                SpannableString spannable = new SpannableString(title);
+                spannable.setSpan(new ForegroundColorSpan(textColor), 0, spannable.length(), 0);
+                menuDone.setTitle(spannable);
+            } else {
+                menuDone.setTitle(title);
+            }
             menuDone.setVisible(imagePickerFragment.isShowDoneButton());
         }
         return super.onPrepareOptionsMenu(menu);
@@ -143,11 +153,31 @@ public class ImagePickerActivity extends AppCompatActivity implements ImagePicke
         setSupportActionBar(toolbar);
         actionBar = getSupportActionBar();
 
+        final int toolbarColor = config.getToolbarColor();
+        if (toolbarColor != ImagePickerConfig.NO_COLOR) {
+            toolbar.setBackgroundColor(toolbarColor);
+        }
+
+        final int statusBarColor = config.getStatusBarColor();
+        if (statusBarColor != ImagePickerConfig.NO_COLOR) {
+            getWindow().setStatusBarColor(statusBarColor);
+        }
+
+        final int textColor = config.getToolbarTextColor();
+        if (textColor != ImagePickerConfig.NO_COLOR) {
+            toolbar.setTitleTextColor(textColor);
+        }
+
         if (actionBar != null) {
             final Drawable arrowDrawable = ViewUtils.getArrowIcon(this);
             final int arrowColor = config.getArrowColor();
-            if (arrowColor != ImagePickerConfig.NO_COLOR && arrowDrawable != null) {
-                arrowDrawable.setColorFilter(arrowColor, PorterDuff.Mode.SRC_ATOP);
+            // If the caller didn't set an explicit arrow color, fall back to toolbarTextColor so
+            // the up-arrow contrasts with the toolbar background.
+            final int effectiveArrowColor = arrowColor != ImagePickerConfig.NO_COLOR
+                    ? arrowColor
+                    : textColor;
+            if (effectiveArrowColor != ImagePickerConfig.NO_COLOR && arrowDrawable != null) {
+                arrowDrawable.setColorFilter(effectiveArrowColor, PorterDuff.Mode.SRC_ATOP);
             }
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeAsUpIndicator(arrowDrawable);

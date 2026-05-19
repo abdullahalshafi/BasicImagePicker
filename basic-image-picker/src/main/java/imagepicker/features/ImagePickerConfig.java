@@ -23,6 +23,9 @@ public class ImagePickerConfig extends BaseConfig implements Parcelable {
     private String imageTitle;
     private String doneButtonText;
     private int arrowColor = NO_COLOR;
+    private int toolbarColor = NO_COLOR;
+    private int statusBarColor = NO_COLOR;
+    private int toolbarTextColor = NO_COLOR;
 
     private int mode;
     private int limit;
@@ -45,6 +48,30 @@ public class ImagePickerConfig extends BaseConfig implements Parcelable {
 
     public void setArrowColor(int arrowColor) {
         this.arrowColor = arrowColor;
+    }
+
+    public int getToolbarColor() {
+        return toolbarColor;
+    }
+
+    public void setToolbarColor(int toolbarColor) {
+        this.toolbarColor = toolbarColor;
+    }
+
+    public int getStatusBarColor() {
+        return statusBarColor;
+    }
+
+    public void setStatusBarColor(int statusBarColor) {
+        this.statusBarColor = statusBarColor;
+    }
+
+    public int getToolbarTextColor() {
+        return toolbarTextColor;
+    }
+
+    public void setToolbarTextColor(int toolbarTextColor) {
+        this.toolbarTextColor = toolbarTextColor;
     }
 
     public int getMode() {
@@ -193,6 +220,9 @@ public class ImagePickerConfig extends BaseConfig implements Parcelable {
         dest.writeString(this.imageTitle);
         dest.writeString(this.doneButtonText);
         dest.writeInt(this.arrowColor);
+        dest.writeInt(this.toolbarColor);
+        dest.writeInt(this.statusBarColor);
+        dest.writeInt(this.toolbarTextColor);
         dest.writeInt(this.mode);
         dest.writeInt(this.limit);
         dest.writeInt(this.theme);
@@ -217,6 +247,9 @@ public class ImagePickerConfig extends BaseConfig implements Parcelable {
         this.imageTitle = in.readString();
         this.doneButtonText = in.readString();
         this.arrowColor = in.readInt();
+        this.toolbarColor = in.readInt();
+        this.statusBarColor = in.readInt();
+        this.toolbarTextColor = in.readInt();
         this.mode = in.readInt();
         this.limit = in.readInt();
         this.theme = in.readInt();

@@ -76,21 +76,25 @@ class ImageUtilActivity : AppCompatActivity() {
             if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(this)) {
                 galleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             } else {
-                ImagePicker.create(this)
+                val picker = ImagePicker.create(this)
                     .folderMode(true)
-                    .toolbarFolderTitle(getString(R.string.select_photo_album)) // folder selection title
-                    .toolbarImageTitle(getString(R.string.tap_to_select)) // image selection title
-                    .toolbarArrowColor(
-                        ContextCompat.getColor(
-                            this,
-                            R.color.basic_image_picker_toolbar_icon_color
-                        )
-                    ) // Toolbar 'up' arrow color
-                    .includeVideo(false) // Show video on image picker
+                    .toolbarFolderTitle(getString(R.string.select_photo_album))
+                    .toolbarImageTitle(getString(R.string.tap_to_select))
+                    .includeVideo(false)
                     .single()
-                    .showCamera(false) // show camera or not (true by default)
-                    .enableLog(false) // disabling log
-                    .start()
+                    .showCamera(false)
+                    .enableLog(false)
+                config.toolbarColor?.let { picker.toolbarColor(it) }
+                config.statusBarColor?.let { picker.statusBarColor(it) }
+                if (config.toolbarOnColor != null) {
+                    picker.toolbarTextColor(config.toolbarOnColor!!)
+                } else {
+                    // Caller's theme didn't provide a color; keep the pre-existing arrow tint.
+                    picker.toolbarArrowColor(
+                        ContextCompat.getColor(this, R.color.basic_image_picker_toolbar_icon_color)
+                    )
+                }
+                picker.start()
             }
         } else {
             throw IllegalArgumentException(getString(R.string.you_must_specify_camera_or_gallery))

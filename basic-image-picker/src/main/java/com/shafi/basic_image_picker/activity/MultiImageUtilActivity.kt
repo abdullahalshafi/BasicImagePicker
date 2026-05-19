@@ -50,22 +50,27 @@ class MultiImageUtilActivity : AppCompatActivity() {
         } else {
             val imagePicker = ImagePicker.create(this)
                 .folderMode(true)
-                .toolbarFolderTitle(getString(R.string.select_photo_album)) // folder selection title
-                .toolbarImageTitle(getString(R.string.tap_to_select)) // image selection title
-                .toolbarArrowColor(
-                    ContextCompat.getColor(
-                        this,
-                        R.color.basic_image_picker_toolbar_icon_color
-                    )
-                ) // Toolbar 'up' arrow color
-                .includeVideo(false) // Show video on image picker
-                .multi() // multi mode (default mode)
+                .toolbarFolderTitle(getString(R.string.select_photo_album))
+                .toolbarImageTitle(getString(R.string.tap_to_select))
+                .includeVideo(false)
+                .multi()
 
             if (config.maxImage != null) {
                 imagePicker.limit(config.maxImage!!)
             }
-            imagePicker.showCamera(false) // show camera or not (true by default)
-            imagePicker.enableLog(false) // disabling log
+            imagePicker.showCamera(false)
+            imagePicker.enableLog(false)
+
+            config.toolbarColor?.let { imagePicker.toolbarColor(it) }
+            config.statusBarColor?.let { imagePicker.statusBarColor(it) }
+            if (config.toolbarOnColor != null) {
+                imagePicker.toolbarTextColor(config.toolbarOnColor!!)
+            } else {
+                imagePicker.toolbarArrowColor(
+                    ContextCompat.getColor(this, R.color.basic_image_picker_toolbar_icon_color)
+                )
+            }
+
             imagePicker.start()
         }
     }
