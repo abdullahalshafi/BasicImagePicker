@@ -8,9 +8,4 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="basic_image_picker_toolbar_icon_color" tools:override="true">#FFFFFF</color>
-    <color name="basic_image_picker_colorPrimary" tools:override="true">#930202</color>
-    <color name="basic_image_picker_colorPrimaryDark" tools:override="true">#680202</color>
-    <color name="basic_image_picker_colorAccent" tools:override="true">#FF4081</color>
-    <color name="basic_image_picker_colorTextPrimary" tools:override="true">#FFFFFF</color>
 </resources>

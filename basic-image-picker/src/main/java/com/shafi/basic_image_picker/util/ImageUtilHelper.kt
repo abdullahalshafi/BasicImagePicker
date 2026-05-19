@@ -77,20 +77,19 @@ class ImageUtilHelper(
     }
 
     /**
-     * Read colorPrimary / colorPrimaryDark / colorOnPrimary from the calling activity's theme so
-     * the esafirm picker chrome (toolbar + status bar + title) matches the host app automatically.
-     * Attrs that can't be resolved stay null and the picker falls back to its bundled defaults.
+     * Read colorPrimary from the calling activity's theme and derive the rest. We deliberately
+     * ignore the theme's colorPrimaryDark / colorOnPrimary because parent themes
+     * (Theme.AppCompat.*, Theme.MaterialComponents.*) define defaults for them, and Android's
+     * theme APIs offer no way to tell "explicitly set by the app" from "inherited default."
+     * Trusting those attrs caused the picker to show the inherited #303030 grey on the status
+     * bar whenever the host app overrode only colorPrimary.
      */
     private fun applyCallerThemeColors() {
         val primary = context.resolveAttrColor(androidx.appcompat.R.attr.colorPrimary)
-        val primaryDark = context.resolveAttrColor(androidx.appcompat.R.attr.colorPrimaryDark)
-            ?: primary?.let { darken(it) }
-        val onPrimary = context.resolveAttrColor(com.google.android.material.R.attr.colorOnPrimary)
-            ?: primary?.let { contrastingColor(it) }
-
+            ?: return
         config.toolbarColor = primary
-        config.statusBarColor = primaryDark
-        config.toolbarOnColor = onPrimary
+        config.statusBarColor = darken(primary)
+        config.toolbarOnColor = contrastingColor(primary)
     }
 
     private fun Context.resolveAttrColor(attr: Int): Int? {
