@@ -3,6 +3,7 @@ package com.shafi.basic_image_picker.activity
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -162,7 +163,14 @@ class ImageUtilActivity : AppCompatActivity() {
 
         imageUri = createEmptyFileAndGetUri()
         if (imageUri != null) {
-            cameraLauncher.launch(imageUri)
+            //Android 11+ only resolves IMAGE_CAPTURE to preinstalled camera apps,
+            //so a disabled or missing stock camera means there is no handler
+            try {
+                cameraLauncher.launch(imageUri)
+            } catch (ex: ActivityNotFoundException) {
+                ex.printStackTrace()
+                sendResultCanceledAndFinish(true, getString(R.string.ef_error_no_camera))
+            }
         } else {
             sendResultCanceledAndFinish(true)
         }

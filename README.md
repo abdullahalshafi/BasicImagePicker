@@ -30,7 +30,7 @@ Module `build.gradle`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.abdullahalshafi:BasicImagePicker:1.1.8")
+    implementation("com.github.abdullahalshafi:BasicImagePicker:1.1.9")
 }
 ```
 
@@ -67,6 +67,11 @@ ImageUtilHelper.create(this, cameraLauncher) {
     start()
 }
 ```
+
+If the device has no camera app that can take the capture request, the picker shows a
+"No camera found" toast and returns `RESULT_CANCELED`. This happens when the stock camera
+app is disabled or missing, because Android 11+ only sends `IMAGE_CAPTURE` to preinstalled
+camera apps.
 
 ### Gallery (single image)
 
