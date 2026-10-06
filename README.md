@@ -30,7 +30,7 @@ Module `build.gradle`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.abdullahalshafi:BasicImagePicker:1.1.9")
+    implementation("com.github.abdullahalshafi:BasicImagePicker:1.1.10")
 }
 ```
 

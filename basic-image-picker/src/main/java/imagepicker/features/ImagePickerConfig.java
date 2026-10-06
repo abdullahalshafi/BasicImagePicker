@@ -14,7 +14,9 @@ import java.util.ArrayList;
 
 public class ImagePickerConfig extends BaseConfig implements Parcelable {
 
-    public static final int NO_COLOR = -1;
+    // Same sentinel as the basic_image_picker_* colors.xml defaults / ImageUtilHelper.
+    // Must not be -1: that is 0xFFFFFFFF (opaque white), so a white color would read as "unset".
+    public static final int NO_COLOR = 0x01000001;
 
     private ArrayList<Image> selectedImages;
     private ArrayList<File> excludedImages;
